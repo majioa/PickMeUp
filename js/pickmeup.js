@@ -461,12 +461,18 @@
 			(function () {
 				var days_elements = [],
 					current_month = local_date.getMonth(),
-					today         = reset_time(new Date).valueOf(),
+					today_date    = new Date,
 					day,
 					day_element,
 					from_user,
 					val,
 					disabled;
+				// Fix today if offset was set
+				if (options.today_offset) {
+					today_date.setTime(today_date.getTime() + options.today_offset);
+				}
+				var today = reset_time(today_date).valueOf();
+
 				// Correct first day in calendar taking into account the first day of the week (Sunday or Monday)
 				(function () {
 					local_date.setDate(1);
@@ -1320,6 +1326,7 @@
 		hide_on_select            : false,
 		min                       : null,
 		max                       : null,
+		today_offset              : null,
 		render                    : function () {
 		},
 		locale                    : 'en',
