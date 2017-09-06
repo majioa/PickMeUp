@@ -46,9 +46,11 @@
 	 * @param {(Element|Element[]|NodeList)} element
 	 */
 	function dom_remove (element) {
+		var ret;
 		dom_for_collection(element, function (element) {
-			element.parentElement.removeChild(element);
+			ret = element.parentElement.removeChild(element);
 		});
+		return ret;
 	}
 
 	/**
@@ -175,6 +177,23 @@
 
 	/**
 	 * @param {Element} element
+	 * @param {string}  parent_selector
+	 * @param {string}  element_name
+	 * @param {hash}    options
+	 *
+	 * @returns {Element}
+	 */
+	function dom_query_or_initialize (element, parent_selector, element_name, options) {
+		var e = dom_query(element, parent_selector + " > ." + element_name);
+		if (!e) {
+			var instance = dom_query(element, parent_selector);
+			e = instance.appendChild(options.instance_content_template([], element_name));
+		}
+		return e;
+	}
+
+	/**
+	 * @param {Element} element
 	 *
 	 * @returns {{top: number, left: number}}
 	 */
@@ -280,7 +299,11 @@
 			instance,
 			shown_date_from,
 			shown_date_to,
-			tmp_date;
+			tmp_date,
+			pmu_days,
+			pmu_months,
+			pmu_years;
+
 		if (min_date) {
 			min_date.setDate(1);
 			date_add_months(min_date, 1);
@@ -291,10 +314,7 @@
 			date_add_months(max_date, 1);
 			date_add_days(max_date, -1);
 		}
-		/**
-		 * Remove old content except header navigation
-		 */
-		dom_remove(dom_query_all(root_element, '.pmu-instance > :not(nav)'));
+
 		/**
 		 * If several calendars should be shown
 		 */
@@ -302,6 +322,11 @@
 			local_date = new Date(current_date);
 			reset_time(local_date);
 			instance = dom_query_all(root_element, '.pmu-instance')[i];
+
+			pmu_years = dom_query_or_initialize(root_element, '.pmu-instance', 'pmu-years', options);
+			pmu_months = dom_query_or_initialize(root_element, '.pmu-instance', 'pmu-months', options);
+			pmu_days = dom_query_or_initialize(root_element, '.pmu-instance', 'pmu-days', options);
+
 			if (dom_has_class(root_element, 'pmu-view-years')) {
 				date_add_years(local_date, (i - current_cal) * 12);
 				header = (local_date.getFullYear() - 6) + ' - ' + (local_date.getFullYear() + 5);
@@ -414,7 +439,7 @@
 					}
 					years_elements.push(year_element);
 				}
-				instance.appendChild(options.instance_content_template(years_elements, 'pmu-years'));
+				instance.replaceChild(options.instance_content_template(years_elements, 'pmu-years'), pmu_years);
 			})();
 			(function () {
 				var months_elements = [],
@@ -456,7 +481,7 @@
 					}
 					months_elements.push(month_element);
 				}
-				instance.appendChild(options.instance_content_template(months_elements, 'pmu-months'));
+				instance.replaceChild(options.instance_content_template(months_elements, 'pmu-months'), pmu_months);
 			})();
 			(function () {
 				var days_elements = [],
@@ -471,7 +496,7 @@
 				if (options.today_offset) {
 					today_date.setTime(today_date.getTime() + options.today_offset);
 				}
-				var today = reset_time(today_date).valueOf();
+				var today = reset_time(today_date);
 
 				// Correct first day in calendar taking into account the first day of the week (Sunday or Monday)
 				(function () {
@@ -514,7 +539,7 @@
 					} else if (from_user.selected || (!('selected' in from_user) && selected)) {
 						dom_add_class(day_element, 'pmu-selected');
 					}
-					if (val == today) {
+					if ((from_user.today || today).setHours(0,0,0,0) == local_date.setHours(0,0,0,0)) {
 						dom_add_class(day_element, 'pmu-today');
 					}
 					if (from_user.class_name) {
@@ -526,7 +551,7 @@
 					// Move to the next day
 					date_add_days(local_date, 1);
 				}
-				instance.appendChild(options.instance_content_template(days_elements, 'pmu-days'));
+				instance.replaceChild(options.instance_content_template(days_elements, 'pmu-days'), pmu_days)
 			})();
 		}
 		shown_date_from.setDate(1);
