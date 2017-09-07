@@ -41,7 +41,6 @@
 	"download"        : "https://github.com/nazar-pc/PickMeUp",
 	"main"            : "dist/pickmeup.min.js",
 	"devDependencies" : {
-		"ncp"                        : "^2.0.0",
 		"google-closure-compiler-js" : "^20170626.0.0 ",
 		"gulp"                       : "^3.9.1"
 	}

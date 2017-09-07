@@ -491,6 +491,8 @@
 					day_element,
 					from_user,
 					val,
+					calendar_gap,
+					selected,
 					disabled;
 				// Fix today if offset was set
 				if (options.today_offset) {
@@ -498,10 +500,21 @@
 				}
 				var today = reset_time(today_date);
 
-				// Correct first day in calendar taking into account the first day of the week (Sunday or Monday)
+				switch (typeof options.calendar_gap) {
+					case 'function':
+						calendar_gap = options.calendar_gap();
+						break;
+					case 'number':
+						calendar_gap = options.calendar_gap;
+						break;
+					default:
+						calendar_gap = 0;
+				}
+
+				// Correct first day in calendar taking into account the first day of the week (Sunday or Monday) and calendar gap
 				(function () {
 					local_date.setDate(1);
-					var day = (local_date.getDay() - options.first_day) % 7;
+					var day = (local_date.getDay() - options.first_day - calendar_gap) % 7;
 					date_add_days(local_date, -(day + (day < 0 ? 7 : 0)));
 				})();
 				for (day = 0; day < 42; ++day) {
@@ -1354,6 +1367,7 @@
 		today_offset              : null,
 		render                    : function () {
 		},
+		calendar_gap	          : null,
 		locale                    : 'en',
 		locales                   : {
 			en : {
